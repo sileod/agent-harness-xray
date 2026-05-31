@@ -3,8 +3,8 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Agent Harness X-Ray — What LLMs Actually See</title>
-    <meta name="description" content="Interactive visualization comparing the hidden system prompts, tools, and token overhead of popular AI coding agents like Claude Code, Cursor, Gemini CLI, Aider, and more.">
+    <title>Agent Harness X-Ray — Coding Agent Prompt Overhead</title>
+    <meta name="description" content="Interactive visualization and sandbox capture workflow for comparing prompt overhead, tools, and dynamic context in popular AI coding agents.">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=JetBrains+Mono:wght@300;400;500;600;700&display=swap" rel="stylesheet">
@@ -30,7 +30,7 @@
                 </div>
                 <div>
                     <h1>Agent Harness X-Ray</h1>
-                    <p class="subtitle">What LLMs <em>actually</em> see from coding agents</p>
+                    <p class="subtitle">What coding-agent harnesses add before and during a turn</p>
                 </div>
             </div>
             <nav class="main-nav">
@@ -67,7 +67,7 @@
         <section id="view-overview" class="view active">
             <div class="view-header">
                 <h2>The Hidden Overhead</h2>
-                <p class="view-desc">Before you type a single character, agents inject thousands of tokens of instructions, tool definitions, and behavioral guidelines. Here's what each agent looks like under the hood.</p>
+                <p class="view-desc">Before and during a turn, agents add instructions, tool definitions, workspace rules, retrieved files, and session metadata. The table separates source-auditable measurements from estimates so comparisons do not overstate what is known.</p>
             </div>
 
             <!-- Key metrics cards -->
@@ -79,7 +79,7 @@
             <div class="chart-section">
                 <div class="chart-header">
                     <h3>System Prompt Overhead by Agent</h3>
-                    <p>Total tokens consumed before the user's first message</p>
+                    <p>Estimated always-on and turn-1 dynamic harness footprint</p>
                     <div class="chart-legend" id="overview-legend"></div>
                 </div>
                 <div class="chart-container" id="overview-chart">
@@ -101,6 +101,7 @@
                                 <th>Total Overhead</th>
                                 <th># Tools</th>
                                 <th># Skills</th>
+                                <th>Evidence</th>
                                 <th>Architecture</th>
                             </tr>
                         </thead>
@@ -139,7 +140,7 @@
         <section id="view-prompt-viewer" class="view">
             <div class="view-header">
                 <h2>System Prompt Viewer</h2>
-                <p class="view-desc">Explore the actual system prompt content of each agent, color-coded by section type.</p>
+                <p class="view-desc">Explore representative prompt sections, color-coded by section type. Proprietary-agent text is summarized or excerpted, not a canonical full prompt dump.</p>
             </div>
             <div class="prompt-controls">
                 <select id="prompt-agent-select" class="agent-select"></select>
@@ -209,37 +210,48 @@
         <section id="view-methodology" class="view">
             <div class="view-header">
                 <h2>Research & Data Methodology</h2>
-                <p class="view-desc">How this data was harvested, compiled, and calculated.</p>
+                <p class="view-desc">How to collect agent prompts without contaminating results or touching your real agent configuration.</p>
             </div>
             
             <div style="display: flex; flex-direction: column; gap: var(--space-xl); max-width: 900px; line-height: 1.8;">
                 <div class="compare-panel" style="border-left: 4px solid var(--accent-primary)">
-                    <h3 style="margin-bottom: var(--space-md); color: var(--text-primary)">🔬 Data Acquisition Strategies</h3>
-                    <p style="margin-bottom: var(--space-md)">Because different AI agents use different software licenses and deployment mechanisms, we employed a hybrid acquisition strategy:</p>
+                    <h3 style="margin-bottom: var(--space-md); color: var(--text-primary)">Data Acquisition</h3>
+                    <p style="margin-bottom: var(--space-md)">A defensible comparison needs to label how each number was obtained. This project uses three evidence tiers:</p>
                     
                     <ul style="padding-left: var(--space-lg); margin-bottom: var(--space-md); display: flex; flex-direction: column; gap: var(--space-sm)">
                         <li>
-                            <strong>Open-Source Codebase Analysis:</strong> 
-                            For open-source agents like <strong style="color: var(--color-aider)">Aider</strong>, we directly parsed the repository source code and templates (specifically the python configuration files at <code>aider/coders/*_prompts.py</code>) to understand exactly how system instructions are structured without traditional tool APIs.
+                            <strong>Source-auditable:</strong>
+                            open-source agents where prompt templates, repo-map construction, and edit formats can be inspected directly.
                         </li>
                         <li>
-                            <strong>Model Introspection & Extraction:</strong> 
-                            For proprietary IDEs like <strong style="color: var(--color-cursor)">Cursor</strong> and <strong style="color: var(--color-windsurf)">Windsurf (Cascade)</strong>, we leveraged community prompt engineering directories (such as <code>x1xhlol/system-prompts-and-models-of-ai-tools</code>) that isolated active system instructions by triggering conversational debug gates or analyzing local Model Context Protocol (MCP) data streams.
+                            <strong>Captured:</strong>
+                            request bodies observed from a controlled sandbox run, with credentials replaced by local dummy endpoints and real user config excluded.
                         </li>
                         <li>
-                            <strong>Reverse Engineering via Source Maps:</strong> 
-                            For <strong style="color: var(--color-claude-code)">Claude Code</strong>, we drew from the widely studied npm package source map leak incident of March 2026, which exposed the complete TypeScript codebase, including all 110+ system prompt segments, anti-distillation parameters, and internal tool rules.
+                            <strong>Estimated:</strong>
+                            proprietary agents where only public docs, visible behavior, community reports, or package inspection are available. These values should be treated as directional.
                         </li>
                     </ul>
                 </div>
 
                 <div class="compare-panel" style="border-left: 4px solid var(--accent-secondary)">
-                    <h3 style="margin-bottom: var(--space-md); color: var(--text-primary)">📊 Token Calculation Standards</h3>
-                    <p style="margin-bottom: var(--space-md)">Since prompt formats differ, we normalized all estimates to ensure clean comparative baselines:</p>
+                    <h3 style="margin-bottom: var(--space-md); color: var(--text-primary)">Token Calculation</h3>
+                    <p style="margin-bottom: var(--space-md)">Prompt formats differ, so the useful baseline is not a single "the prompt" number. Separate at least these buckets:</p>
                     <ul style="padding-left: var(--space-lg); display: flex; flex-direction: column; gap: var(--space-sm)">
-                        <li><strong>Tokenizer Baseline:</strong> All token weights are computed using the <code>cl100k_base</code> and <code>o200k_base</code> tokenizers, which power major frontier models from Anthropic and OpenAI.</li>
-                        <li><strong>Dynamic Additions (Turn 1 Context):</strong> Base calculations represent a clean checkout environment (excluding massive diagnostic traces or custom user codebases) to model the raw "harness tax" of the active agent wrapper.</li>
-                        <li><strong>Workspace Rules Tax:</strong> Dynamic context systems like Cursor's MDC rules (<code>.cursor/rules/</code>) and Windsurf's active rules (<code>.windsurf/rules/</code>) load custom coding conventions dynamically, adding anywhere from 1,500 to 5,000+ persistent tokens to the input window based on your active files.</li>
+                        <li><strong>Always-on baseline:</strong> identity, safety, response style, and built-in tool schemas that appear in a clean session.</li>
+                        <li><strong>Project dynamic:</strong> files such as <code>CLAUDE.md</code>, <code>.cursor/rules/*.mdc</code>, <code>.windsurf/rules/*</code>, and <code>.github/copilot-instructions.md</code>.</li>
+                        <li><strong>Session dynamic:</strong> cwd, OS, selected text, open tabs, diagnostics, git diff, MCP tool definitions, retrieved code chunks, and prior tool results.</li>
+                        <li><strong>Tokenizer:</strong> use the tokenizer matching the target model when possible. Otherwise mark counts as approximate and keep comparisons at the component level.</li>
+                    </ul>
+                </div>
+                <div class="compare-panel" style="border-left: 4px solid var(--accent-warning)">
+                    <h3 style="margin-bottom: var(--space-md); color: var(--text-primary)">Sandboxed Extraction</h3>
+                    <p style="margin-bottom: var(--space-md)">The repository now includes <code>tools/capture-agent.mjs</code> plus <code>scripts/xray-opencode.sh</code> and <code>scripts/xray-hermes.sh</code>. They run an agent command with a temporary <code>HOME</code>, temporary XDG directories, dummy API keys, and local capture endpoints for OpenAI-, Anthropic-, and Google-style base URLs.</p>
+                    <ul style="padding-left: var(--space-lg); display: flex; flex-direction: column; gap: var(--space-sm)">
+                        <li>Use <code>--fixture</code> to point the agent at a synthetic project containing known rule files.</li>
+                        <li>Use <code>--allow-real-home</code> only when you explicitly want the run to see your installed agent config.</li>
+                        <li>Compare a blank fixture against a rule-heavy fixture to identify what is always present versus what is dynamically injected.</li>
+                        <li>Captured request payloads are ground truth for what the agent attempted to send to the provider endpoint, not necessarily for provider-side tokenization.</li>
                     </ul>
                 </div>
             </div>
@@ -248,8 +260,8 @@
 
     <!-- Footer -->
     <footer>
-        <p>Data sourced from public GitHub repos, leaked prompts, and community research • Not affiliated with any agent vendor</p>
-        <p class="footer-note">Token counts are approximations based on cl100k_base tokenizer estimates</p>
+        <p>Data sourced from public documentation, open-source code, controlled capture where possible, and clearly labeled estimates • Not affiliated with any agent vendor</p>
+        <p class="footer-note">Token counts are approximate unless explicitly marked as source-auditable or captured</p>
     </footer>
 
     <script src="data.js"></script>

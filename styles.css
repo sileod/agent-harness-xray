@@ -35,6 +35,8 @@
     --color-aider: #55efc4;
     --color-windsurf: #0ea5e9;
     --color-copilot: #6e40c9;
+    --color-opencode: #f97316;
+    --color-hermes: #22c55e;
     
     /* Category colors for prompt sections */
     --cat-identity: #6c5ce7;
@@ -130,6 +132,36 @@ body.light-theme .budget-segment span {
 .theme-toggle-btn:hover {
     background: var(--bg-card-hover);
     border-color: var(--border-active);
+}
+
+.status-pill {
+    display: inline-flex;
+    align-items: center;
+    min-height: 24px;
+    padding: 2px 8px;
+    border-radius: var(--radius-sm);
+    border: 1px solid var(--border-color);
+    background: var(--bg-tertiary);
+    color: var(--text-secondary);
+    font-size: 0.76rem;
+    font-weight: 700;
+    line-height: 1.2;
+    white-space: nowrap;
+}
+
+.status-source-auditable {
+    border-color: rgba(85, 239, 196, 0.28);
+    color: var(--accent-success);
+}
+
+.status-captured {
+    border-color: rgba(0, 206, 201, 0.28);
+    color: var(--accent-secondary);
+}
+
+.status-estimated {
+    border-color: rgba(253, 203, 110, 0.28);
+    color: var(--accent-warning);
 }
 
 .theme-icon {
@@ -1244,6 +1276,32 @@ input[type="range"]::-webkit-slider-thumb {
     display: flex;
     flex-direction: column;
     gap: 2px;
+}
+
+.anatomy-evidence {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: var(--space-md);
+    margin-bottom: var(--space-xl);
+}
+
+.anatomy-evidence > div {
+    background: var(--bg-card);
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-md);
+    padding: var(--space-lg);
+}
+
+.anatomy-evidence h4 {
+    font-size: 0.9rem;
+    margin-bottom: var(--space-sm);
+    color: var(--text-primary);
+}
+
+.anatomy-evidence ul {
+    padding-left: var(--space-lg);
+    color: var(--text-secondary);
+    font-size: 0.82rem;
 }
 
 .anatomy-layer {

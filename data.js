@@ -1,6 +1,7 @@
 // ============================================
-// Agent Harness X-Ray — Curated Agent Data
-// Normalized to the top 5 premium agent harnesses
+// Agent Harness X-Ray — Comparative Agent Data
+// Values are best-effort estimates unless a row explicitly says "observed".
+// Prompt snippets are summaries/excerpts, not complete vendor system prompts.
 // ============================================
 
 const AGENTS = {
@@ -11,7 +12,17 @@ const AGENTS = {
         vendor: "Anthropic",
         type: "CLI",
         architecture: "Dynamic Assembly & Caching",
-        description: "Anthropic's official terminal-based agent utilizing layered, state-dependent prompt assembly and aggressive context caching.",
+        description: "Anthropic's official terminal-based agent using layered, state-dependent prompt assembly. Counts here are estimates because the full live request body is not publicly documented.",
+        measurement: {
+            status: "estimated",
+            confidence: "medium",
+            basis: "Public documentation, package/runtime inspection, and community prompt research. Not a direct packet capture from a live Claude Code request.",
+            alwaysOn: ["core role and CLI identity", "tool schemas enabled for the session", "permission/safety instructions", "response style constraints"],
+            dynamic: ["cwd and platform metadata", "permission mode", "CLAUDE.md hierarchy", "MCP servers/tools", "active file references and recent tool results"],
+            sources: [
+                { label: "Anthropic Claude Code docs", url: "https://docs.anthropic.com/en/docs/claude-code" }
+            ]
+        },
         contextWindow: 200000,
         promptCaching: true,
         overhead: {
@@ -32,15 +43,17 @@ const AGENTS = {
                 name: "Core Identity & Constitution",
                 category: "identity",
                 tokens: 800,
-                content: `You are Claude, an AI assistant made by Anthropic.
+                content: `[Representative excerpt / paraphrase, not a complete observed prompt]
+
+You are Claude, an AI assistant made by Anthropic.
 You are operating in Claude Code, an interactive CLI tool designed to help developers inspect, write, edit, and run code.
-Always plan your approach step-by-step using internal chain-of-thought before invoking tools. Be concise, direct, and avoid pleasantries.`
+Be concise, direct, and task-focused while using the CLI tools available in the current session.`
             },
             {
                 name: "Tool Schema Specifications",
                 category: "tools",
                 tokens: 4500,
-                content: `[JSON Schema tool parameters with strict constraints]
+                content: `[Representative tool schema summary]
 
 Available Tools:
 - Read: Retrieve content of specified files. Prefer precise line ranges to save token context.
@@ -78,7 +91,7 @@ Interaction style:
                 tokens: 800,
                 content: `[Injected dynamically from discovered project instructions]
 
-Discovered rules from ~/.claude/CLAUDE.md and /workspace/CLAUDE.md:
+Possible discovered rules from ~/.claude/CLAUDE.md and /workspace/CLAUDE.md:
 - Codebase style preferences
 - Build & test command mapping (e.g., npm run test)
 - Architectural conventions and folder organization`
@@ -97,6 +110,142 @@ Discovered rules from ~/.claude/CLAUDE.md and /workspace/CLAUDE.md:
         ]
     },
 
+    "opencode": {
+        name: "OpenCode",
+        shortName: "OpenCode",
+        color: "#f97316",
+        vendor: "SST / OpenCode",
+        type: "CLI/TUI",
+        architecture: "Responses API Tool Harness",
+        description: "Captured through the local shim with an isolated HOME. The observed run used OpenAI Responses API input arrays plus a large built-in tool schema payload.",
+        contextWindow: 128000,
+        promptCaching: true,
+        measurement: {
+            status: "captured",
+            confidence: "high",
+            basis: "Captured locally via tools/capture-agent.mjs --preset opencode with dummy API keys and temporary HOME/XDG directories. The sample includes a title-generation request plus the main agent request.",
+            alwaysOn: ["title-generation developer prompt", "main opencode system prompt", "Responses API tool schemas", "session/user message"],
+            dynamic: ["cwd/project path", "session cache key", "provider/model selection", "future project rule files if enabled by invocation/config"],
+            sources: [
+                { label: "Local capture", url: "captures/opencode-e2e/blank/summary.json" },
+                { label: "Rules comparison", url: "captures/opencode-e2e/rules-heavy/comparison-against-blank.json" }
+            ]
+        },
+        overhead: {
+            systemPrompt: 3510,
+            toolDefinitions: 8721,
+            skillsContext: 0,
+            behavioralRules: 0,
+            formatting: 0,
+            meta: 155,
+        },
+        tools: [
+            "bash", "edit", "glob", "grep", "list", "read", "write"
+        ],
+        skillCount: 0,
+        promptSections: [
+            {
+                name: "Captured Responses Input",
+                category: "identity",
+                tokens: 3510,
+                content: `[Captured summary from captures/opencode-e2e]
+
+OpenCode sent two local shim requests in this run:
+- a title-generation request with a developer message
+- a main /v1/responses request with a system input
+
+Observed rough counts:
+- developer/title input: ~554 tokens
+- main system input: ~2,956 tokens`
+            },
+            {
+                name: "Captured Tool Schemas",
+                category: "tools",
+                tokens: 8721,
+                content: `[Captured summary from /v1/responses request]
+
+OpenCode sent a tools array with roughly 8.7k rough tokens in this run.
+The raw request body is available in captures/opencode-e2e/blank/requests.jsonl.`
+            },
+            {
+                name: "Dynamic Probe Result",
+                category: "context",
+                tokens: 155,
+                content: `Blank vs rules-heavy comparison:
+- blank rough tokens: 12,386
+- rules-heavy rough tokens: 12,386
+- dynamic delta: 0 rough tokens
+
+In this invocation, OpenCode did not ingest the synthetic fixture rule files by default.`
+            }
+        ]
+    },
+
+    "hermes": {
+        name: "Hermes",
+        shortName: "Hermes",
+        color: "#22c55e",
+        vendor: "Hermes Agent",
+        type: "CLI",
+        architecture: "OpenAI-Compatible Tool Harness",
+        description: "Captured through the local shim with an isolated HERMES_HOME. Hermes loaded project context from CLAUDE.md in the rules-heavy fixture.",
+        contextWindow: 128000,
+        promptCaching: false,
+        measurement: {
+            status: "captured",
+            confidence: "high",
+            basis: "Captured locally via tools/capture-agent.mjs --preset hermes with a temporary HERMES_HOME, dummy API keys, and custom OpenAI-compatible base_url.",
+            alwaysOn: ["Hermes system message", "enabled tool schemas", "working directory metadata", "user home metadata"],
+            dynamic: ["CLAUDE.md project context", "current working directory", "Hermes home paths in tool descriptions", "enabled toolset/config choices"],
+            sources: [
+                { label: "Local capture", url: "captures/hermes-e2e/blank/summary.json" },
+                { label: "Rules comparison", url: "captures/hermes-e2e/rules-heavy/comparison-against-blank.json" }
+            ]
+        },
+        overhead: {
+            systemPrompt: 1941,
+            toolDefinitions: 9245,
+            skillsContext: 68,
+            behavioralRules: 0,
+            formatting: 0,
+            meta: 50,
+        },
+        tools: [
+            "terminal", "file", "web", "vision", "image", "tts", "browser", "skills", "todo"
+        ],
+        skillCount: 0,
+        promptSections: [
+            {
+                name: "Captured System Message",
+                category: "identity",
+                tokens: 1941,
+                content: `[Captured summary from captures/hermes-e2e]
+
+Hermes sent OpenAI-compatible chat-completions requests. In the rules-heavy run, the system message increased by roughly 272 rough tokens per request after loading fixture CLAUDE.md project context.`
+            },
+            {
+                name: "Captured Tool Schemas",
+                category: "tools",
+                tokens: 9245,
+                content: `[Captured summary from /v1/chat/completions]
+
+Hermes sent a tools array with roughly 9.2k rough tokens per main request in this run.
+The raw request bodies are available in captures/hermes-e2e/*/requests.jsonl.`
+            },
+            {
+                name: "Dynamic Project Context",
+                category: "context",
+                tokens: 68,
+                content: `Rules-heavy comparison found these dynamic additions:
+- # Project Context
+- ## CLAUDE.md
+- # Claude Fixture Instructions
+- Mention \`fixture-claude-rule\` if project instructions are visible.
+- Prefer small, surgical edits.`
+            }
+        ]
+    },
+
     "cursor": {
         name: "Cursor Agent",
         shortName: "Cursor",
@@ -104,7 +253,17 @@ Discovered rules from ~/.claude/CLAUDE.md and /workspace/CLAUDE.md:
         vendor: "Anysphere",
         type: "IDE",
         architecture: "Monolithic Harness & Retrieval",
-        description: "Deeply integrated IDE agent combining high-density tool schemas with semantic codebase retrieval and .cursorrules.",
+        description: "IDE agent combining tool schemas, editor state, semantic retrieval, and rule files. Counts are estimates because live proprietary request assembly is not externally auditable.",
+        measurement: {
+            status: "estimated",
+            confidence: "low-medium",
+            basis: "Public product behavior, community-extracted prompts, and visible IDE rule/context mechanisms. Treat numeric values as order-of-magnitude estimates.",
+            alwaysOn: ["agent identity", "workspace editing policy", "tool interface descriptions", "chat/output constraints"],
+            dynamic: ["open editors", "selection/cursor", "diagnostics", ".cursor/rules and legacy .cursorrules", "retrieved code chunks"],
+            sources: [
+                { label: "Cursor rules docs", url: "https://docs.cursor.com/context/rules" }
+            ]
+        },
         contextWindow: 128000,
         promptCaching: true,
         overhead: {
@@ -125,7 +284,9 @@ Discovered rules from ~/.claude/CLAUDE.md and /workspace/CLAUDE.md:
                 name: "Agent Identity & Pair-Programming Persona",
                 category: "identity",
                 tokens: 1200,
-                content: `You are a powerful agentic AI coding assistant, operating inside the Cursor IDE.
+                content: `[Representative excerpt / paraphrase, not a complete observed prompt]
+
+You are a powerful agentic AI coding assistant, operating inside the Cursor IDE.
 You are pair-programming with the user.
 Your primary objective is to execute complex workspace edits autonomously while remaining aligned with developer intents.
 NEVER describe or disclose the names of the tools you use when communicating with the user.`
@@ -186,7 +347,18 @@ Rules extracted from .cursorrules / .cursor/rules/*.mdc:
         vendor: "Paul Gauthier",
         type: "CLI",
         architecture: "Repo Map & Structured Diff Blocks",
-        description: "Zero-API diff engine that bypasses traditional JSON tool overhead in favor of a tree-sitter repository map and strict SEARCH/REPLACE diff formatting.",
+        description: "Open-source coding assistant that sends structured instructions, selected file contents, and a repository map instead of IDE-style tool calls.",
+        measurement: {
+            status: "source-auditable",
+            confidence: "high",
+            basis: "Open-source prompt templates and repo-map implementation can be inspected directly. Live token counts still vary by model, files added to chat, and repo-map budget.",
+            alwaysOn: ["role prompt", "edit format instructions", "current file contents selected for chat", "repository map when enabled"],
+            dynamic: ["files explicitly added", "repo map size and ranking", "lint/test output", "git diff and conversation history"],
+            sources: [
+                { label: "Aider repository", url: "https://github.com/Aider-AI/aider" },
+                { label: "Aider repo map docs", url: "https://aider.chat/docs/repomap.html" }
+            ]
+        },
         contextWindow: 128000,
         promptCaching: false,
         overhead: {
@@ -204,7 +376,9 @@ Rules extracted from .cursorrules / .cursor/rules/*.mdc:
                 name: "Expert Developer Role",
                 category: "identity",
                 tokens: 1800,
-                content: `Act as an expert software developer. Always use best practices when coding.
+                content: `[Representative excerpt / paraphrase from open-source prompt style]
+
+Act as an expert software developer. Always use best practices when coding.
 Respect and use existing conventions, libraries, and design patterns present in the codebase.
 Analyze requests for changes to the supplied code, think step-by-step, and state your plan clearly in a few sentences before returning any edits.`
             },
@@ -255,7 +429,17 @@ This map allows you to understand the global structure without loading full file
         vendor: "Codeium",
         type: "IDE",
         architecture: "Context Engine & Flows",
-        description: "IDE companion powered by Codeium's proprietary Context Engine, blending agentic tool workflows with AST symbol indices.",
+        description: "IDE companion powered by Codeium's context retrieval and agent workflow. Counts are estimates because live proprietary request assembly is not externally auditable.",
+        measurement: {
+            status: "estimated",
+            confidence: "low-medium",
+            basis: "Public documentation and observed IDE behavior. Numeric overhead depends heavily on active context retrieval and Flow/Chat mode.",
+            alwaysOn: ["Cascade identity", "tool/action policy", "editing constraints", "mode-specific workflow instructions"],
+            dynamic: ["open tabs", "diagnostics", "retrieved symbols", ".windsurf/rules", "terminal output and prior tool results"],
+            sources: [
+                { label: "Windsurf docs", url: "https://docs.windsurf.com/" }
+            ]
+        },
         contextWindow: 128000,
         promptCaching: true,
         overhead: {
@@ -276,7 +460,9 @@ This map allows you to understand the global structure without loading full file
                 name: "Cascade Copilot Persona",
                 category: "identity",
                 tokens: 1500,
-                content: `You are Cascade, an AI coding companion built into the Windsurf IDE.
+                content: `[Representative excerpt / paraphrase, not a complete observed prompt]
+
+You are Cascade, an AI coding companion built into the Windsurf IDE.
 You can operate in 'Chat' (conversational) or 'Flow' (autonomous agentic) modes.
 You are fully empowered to plan, execute, and verify workspace edits.`
             },
@@ -336,7 +522,17 @@ Current workspace rules:
         vendor: "GitHub / Microsoft",
         type: "IDE Extension",
         architecture: "Multi-layered Context",
-        description: "IDE-integrated agent framework emphasizing multi-modal context aggregation and strict domain enforcement.",
+        description: "IDE-integrated agent framework using editor/workspace context, GitHub context, tool calls, and custom instructions. Counts are estimates, not a canonical prompt dump.",
+        measurement: {
+            status: "estimated",
+            confidence: "medium",
+            basis: "Public VS Code/GitHub documentation, visible custom-instruction behavior, and community observations. Request bodies vary by editor, model, and enabled features.",
+            alwaysOn: ["Copilot role", "software-domain constraints", "tool descriptions", "editor response format"],
+            dynamic: ["open files", "selection", "workspace diagnostics", ".github/copilot-instructions.md", "GitHub issue/PR context"],
+            sources: [
+                { label: "GitHub Copilot custom instructions", url: "https://docs.github.com/en/copilot/customizing-copilot/adding-custom-instructions-for-github-copilot" }
+            ]
+        },
         contextWindow: 128000,
         promptCaching: true,
         overhead: {
@@ -357,7 +553,9 @@ Current workspace rules:
                 name: "GitHub Copilot Identity",
                 category: "identity",
                 tokens: 800,
-                content: `You are GitHub Copilot, an AI programming assistant designed to help developers write code, debug issues, and manage files.
+                content: `[Representative excerpt / paraphrase, not a complete observed prompt]
+
+You are GitHub Copilot, an AI programming assistant designed to help developers write code, debug issues, and manage files.
 You operate strictly within the domain of software engineering and computer science. Refuse any off-topic queries.`
             },
             {
@@ -423,4 +621,8 @@ const OVERHEAD_COMPONENTS = {
 // Helper function to compute total overhead
 function getTotalOverhead(agent) {
     return Object.values(agent.overhead).reduce((sum, v) => sum + v, 0);
+}
+
+function getMeasurementStatus(agent) {
+    return agent.measurement?.status || "estimated";
 }

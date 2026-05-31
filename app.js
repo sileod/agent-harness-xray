@@ -116,7 +116,7 @@ function renderOverviewMetrics() {
         {
             label: "Largest Harness",
             value: `${(largestTokens / 1000).toFixed(1)}k`,
-            detail: "Tokens sent on turn 1",
+            detail: "Estimated turn-1 harness footprint",
             agent: largestAgent.name,
             color: largestAgent.color
         },
@@ -137,8 +137,8 @@ function renderOverviewMetrics() {
         {
             label: "Caching Support",
             value: `${((cachingCount / Object.keys(AGENTS).length) * 100).toFixed(0)}%`,
-            detail: "Drastically cuts turn-by-turn API costs",
-            agent: "Claude Code (Pioneer)",
+            detail: "Publicly documented or strongly inferred",
+            agent: "Varies by provider/model",
             color: "var(--color-claude-code)"
         }
     ];
@@ -227,6 +227,7 @@ function renderComparisonTable() {
                 <td class="td-tokens td-highlight">${total.toLocaleString()}</td>
                 <td>${agent.tools.length}</td>
                 <td>${agent.skillCount || '—'}</td>
+                <td><span class="status-pill status-${slugify(getMeasurementStatus(agent))}">${getMeasurementStatus(agent)}</span></td>
                 <td><span class="td-arch">${agent.architecture}</span></td>
             </tr>
         `;
@@ -330,6 +331,10 @@ function renderComparePanel(containerId, agentKey) {
                 <div class="compare-stat-label">Total Tools</div>
                 <div class="compare-stat-value" style="color: var(--accent-secondary)">${agent.tools.length}</div>
             </div>
+            <div class="compare-stat">
+                <div class="compare-stat-label">Evidence</div>
+                <div class="compare-stat-value" style="font-size: 0.9rem">${agent.measurement?.confidence || 'unknown'}</div>
+            </div>
         </div>
 
         <div class="compare-donut">
@@ -349,6 +354,9 @@ function renderComparePanel(containerId, agentKey) {
 
         <div style="margin-top: var(--space-lg); font-size: 0.82rem; color: var(--text-secondary)">
             <strong>Harness details:</strong> ${agent.description}
+        </div>
+        <div style="margin-top: var(--space-md); font-size: 0.8rem; color: var(--text-tertiary)">
+            <strong>Measurement basis:</strong> ${agent.measurement?.basis || 'No measurement note available.'}
         </div>
     `;
 }
@@ -391,6 +399,7 @@ function updatePromptViewer() {
         <div class="prompt-stat">Harness Overhead: <strong>${total.toLocaleString()} tokens</strong></div>
         <div class="prompt-stat">Tool Schemas: <strong>${(agent.overhead.toolDefinitions || 0).toLocaleString()} tokens</strong></div>
         <div class="prompt-stat">Architecture: <strong style="color: ${agent.color}">${agent.architecture}</strong></div>
+        <div class="prompt-stat">Evidence: <strong>${getMeasurementStatus(agent)}</strong></div>
     `;
 
     // Render TOC
@@ -435,6 +444,9 @@ function updatePromptViewer() {
             <p style="font-size: 0.85rem; color: var(--text-secondary); margin-bottom: var(--space-md)">
                 Estimated Token Weight: <strong style="font-family: var(--font-mono); color: var(--text-primary)">${sec.tokens.toLocaleString()} tokens</strong> 
                 (${((sec.tokens / total) * 100).toFixed(1)}% of total harness)
+            </p>
+            <p style="font-size: 0.82rem; color: var(--text-tertiary); margin-bottom: var(--space-md)">
+                Evidence note: ${agent.measurement?.basis || 'No measurement note available.'}
             </p>
 
             <pre class="prompt-text"><code>${escapeHTML(sec.content)}</code></pre>
@@ -495,7 +507,7 @@ function updateBudget() {
     // Compute turns tokens
     // Turn 1: baseOverhead + User Prompt (150) + Response (600) + loopTrace (80)
     // Dynamic context grows. In non-cached mode, everything is re-sent.
-    // In cached mode (enabled for most in 2026), baseOverhead is cached.
+    // In cached mode, assume the stable base overhead can hit provider cache.
     const turnCost = userPromptSize + agentResponseSize + loopTraceCost;
     
     // Total tokens in prompt context at current turn:
@@ -555,7 +567,7 @@ function updateBudget() {
     // Render detailed stats
     const details = document.getElementById('budget-details');
     
-    // Cost calculation (using 2026 pricing: $3/M input, $15/M output approx, or cached input $0.30/M)
+    // Cost calculation: deliberately model-agnostic placeholder rates.
     const costStandard = (totalAccumulatedInputTokens / 1000000) * 3 + ((agentResponseSize * turns) / 1000000) * 15;
     const costCached = (cachedAccumulatedInputTokens / 1000000) * 0.3 + ((baseOverhead * (turns - 1)) / 1000000) * 3 + ((agentResponseSize * turns) / 1000000) * 15;
     
@@ -574,7 +586,7 @@ function updateBudget() {
             <div class="budget-detail-item" style="border: 1px solid rgba(85, 239, 196, 0.2)">
                 <div class="budget-detail-label">Cached Conversation Cost</div>
                 <div class="budget-detail-value" style="color: var(--accent-success)">$${costCached.toFixed(3)}</div>
-                <div class="budget-detail-sub">With 2026 Prompt Caching (90% off)</div>
+                <div class="budget-detail-sub">With assumed cached-input discount</div>
             </div>
             <div class="budget-detail-item">
                 <div class="budget-detail-label">Overhead Tax</div>
@@ -626,6 +638,9 @@ function updateAnatomy() {
     if (!agent || !container) return;
 
     const total = getTotalOverhead(agent);
+
+    const alwaysOn = agent.measurement?.alwaysOn || [];
+    const dynamic = agent.measurement?.dynamic || [];
 
     // Dynamic additions for turn 1 context
     const layers = [
@@ -679,7 +694,20 @@ function updateAnatomy() {
         }
     ];
 
-    container.innerHTML = layers.map((layer, idx) => {
+    const evidenceHTML = `
+        <div class="anatomy-evidence">
+            <div>
+                <h4>Always-on baseline</h4>
+                <ul>${alwaysOn.map(item => `<li>${escapeHTML(item)}</li>`).join('')}</ul>
+            </div>
+            <div>
+                <h4>Dynamic additions</h4>
+                <ul>${dynamic.map(item => `<li>${escapeHTML(item)}</li>`).join('')}</ul>
+            </div>
+        </div>
+    `;
+
+    container.innerHTML = evidenceHTML + layers.map((layer, idx) => {
         const pct = (layer.tokens / total) * 100;
         return `
             <div class="anatomy-layer" id="anatomy-layer-${idx}">
@@ -725,4 +753,8 @@ function hexToRgb(hex) {
     const g = parseInt(hex.substring(2, 4), 16);
     const b = parseInt(hex.substring(4, 6), 16);
     return `${r}, ${g}, ${b}`;
+}
+
+function slugify(str) {
+    return String(str).toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '');
 }
