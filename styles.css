@@ -10,6 +10,7 @@
     --bg-card: #161825;
     --bg-card-hover: #1c1f30;
     --bg-elevated: #1e2133;
+    --bg-header: rgba(10, 11, 15, 0.85);
     
     --text-primary: #e8eaf0;
     --text-secondary: #9498a8;
@@ -83,6 +84,7 @@ body.light-theme {
     --bg-card: #ffffff;
     --bg-card-hover: #f9fbfd;
     --bg-elevated: #f0f3f8;
+    --bg-header: rgba(255, 255, 255, 0.85);
     
     --text-primary: #1e2229;
     --text-secondary: #58606e;
@@ -248,10 +250,11 @@ header {
     position: sticky;
     top: 0;
     z-index: 100;
-    background: rgba(10, 11, 15, 0.85);
+    background: var(--bg-header);
     backdrop-filter: blur(20px) saturate(180%);
     border-bottom: 1px solid var(--border-color);
     padding: var(--space-md) var(--space-xl);
+    transition: background-color var(--transition-normal), border-color var(--transition-normal);
 }
 
 .header-content {

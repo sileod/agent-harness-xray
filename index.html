@@ -49,6 +49,9 @@
                 <button class="nav-btn" data-view="anatomy" id="nav-anatomy">
                     <span class="nav-icon">⚏</span> Anatomy
                 </button>
+                <button class="nav-btn" data-view="methodology" id="nav-methodology">
+                    <span class="nav-icon">💡</span> Methodology
+                </button>
                 <button class="theme-toggle-btn" id="theme-toggle" aria-label="Toggle color mode">
                     <span class="theme-icon moon-icon">🌙</span>
                     <span class="theme-icon sun-icon">☀️</span>
@@ -199,6 +202,46 @@
             </div>
             <div class="anatomy-container" id="anatomy-container">
                 <!-- Layered visualization -->
+            </div>
+        </section>
+
+        <!-- ===== METHODOLOGY VIEW ===== -->
+        <section id="view-methodology" class="view">
+            <div class="view-header">
+                <h2>Research & Data Methodology</h2>
+                <p class="view-desc">How this data was harvested, compiled, and calculated.</p>
+            </div>
+            
+            <div style="display: flex; flex-direction: column; gap: var(--space-xl); max-width: 900px; line-height: 1.8;">
+                <div class="compare-panel" style="border-left: 4px solid var(--accent-primary)">
+                    <h3 style="margin-bottom: var(--space-md); color: var(--text-primary)">🔬 Data Acquisition Strategies</h3>
+                    <p style="margin-bottom: var(--space-md)">Because different AI agents use different software licenses and deployment mechanisms, we employed a hybrid acquisition strategy:</p>
+                    
+                    <ul style="padding-left: var(--space-lg); margin-bottom: var(--space-md); display: flex; flex-direction: column; gap: var(--space-sm)">
+                        <li>
+                            <strong>Open-Source Codebase Analysis:</strong> 
+                            For agents like <strong style="color: var(--color-gemini-cli)">Gemini CLI</strong>, <strong style="color: var(--color-opencode)">OpenCode</strong>, and <strong style="color: var(--color-aider)">Aider</strong>, we directly parsed the repository source code to locate internal prompt assembly mechanisms (e.g., <code>packages/core/src/core/prompts.ts</code> for Gemini, and <code>aider/coders/editblock_prompts.py</code> for Aider).
+                        </li>
+                        <li>
+                            <strong>Model Introspection & Extraction:</strong> 
+                            For proprietary IDEs like <strong style="color: var(--color-cursor)">Cursor</strong> and <strong style="color: var(--color-windsurf)">Windsurf (Cascade)</strong>, we leveraged community prompt engineering directories (such as <code>x1xhlol/system-prompts-and-models-of-ai-tools</code>) that isolated active system instructions by triggering conversational debug gates or analyzing local Model Context Protocol (MCP) data streams.
+                        </li>
+                        <li>
+                            <strong>Reverse Engineering via Source Maps:</strong> 
+                            For <strong style="color: var(--color-claude-code)">Claude Code</strong>, we drew from the widely studied npm package source map leak incident of March 2026, which exposed the complete TypeScript codebase, including all 110+ system prompt segments, anti-distillation parameters, and internal tool rules.
+                        </li>
+                    </ul>
+                </div>
+
+                <div class="compare-panel" style="border-left: 4px solid var(--accent-secondary)">
+                    <h3 style="margin-bottom: var(--space-md); color: var(--text-primary)">📊 Token Calculation Standards</h3>
+                    <p style="margin-bottom: var(--space-md)">Since prompt formats differ, we normalized all estimates to ensure clean comparative baselines:</p>
+                    <ul style="padding-left: var(--space-lg); display: flex; flex-direction: column; gap: var(--space-sm)">
+                        <li><strong>Tokenizer Baseline:</strong> All token weights are computed using the <code>cl100k_base</code> and <code>o200k_base</code> tokenizers, which power major frontier models from Anthropic and OpenAI.</li>
+                        <li><strong>Dynamic Additions (Turn 1 Context):</strong> Base calculations represent a clean checkout environment (excluding massive diagnostic traces or custom user codebases) to model the raw "harness tax" of the active agent wrapper.</li>
+                        <li><strong>Skills Context Tax:</strong> In Gemini CLI, the extensible skills system loads the name and description of all discovered skills on startup, creating a static overhead of ~5,000 tokens before any specific skill-action is activated.</li>
+                    </ul>
+                </div>
             </div>
         </section>
     </main>
