@@ -87,8 +87,8 @@ function renderOverviewMetrics() {
     let toolHeavyAgent = null;
     let maxTools = 0;
 
-    let skillHeavyAgent = null;
-    let maxSkills = 0;
+    let cachingCount = 0;
+    let cachingAgent = null;
 
     Object.keys(AGENTS).forEach(key => {
         const agent = AGENTS[key];
@@ -106,9 +106,9 @@ function renderOverviewMetrics() {
             maxTools = agent.tools.length;
             toolHeavyAgent = agent;
         }
-        if (agent.skillCount > maxSkills) {
-            maxSkills = agent.skillCount;
-            skillHeavyAgent = agent;
+        if (agent.promptCaching) {
+            cachingCount++;
+            if (!cachingAgent) cachingAgent = agent;
         }
     });
 
@@ -135,11 +135,11 @@ function renderOverviewMetrics() {
             color: toolHeavyAgent.color
         },
         {
-            label: "Most Extensible",
-            value: skillHeavyAgent.skillCount,
-            detail: "On-demand discovered skills",
-            agent: skillHeavyAgent.name,
-            color: skillHeavyAgent.color
+            label: "Caching Support",
+            value: `${((cachingCount / Object.keys(AGENTS).length) * 100).toFixed(0)}%`,
+            detail: "Drastically cuts turn-by-turn API costs",
+            agent: "Claude Code (Pioneer)",
+            color: "var(--color-claude-code)"
         }
     ];
 
