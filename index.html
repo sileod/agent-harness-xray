@@ -1,0 +1,215 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Agent Harness X-Ray — What LLMs Actually See</title>
+    <meta name="description" content="Interactive visualization comparing the hidden system prompts, tools, and token overhead of popular AI coding agents like Claude Code, Cursor, Gemini CLI, Aider, and more.">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=JetBrains+Mono:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <!-- Ambient background effects -->
+    <div class="bg-grid"></div>
+    <div class="bg-glow bg-glow-1"></div>
+    <div class="bg-glow bg-glow-2"></div>
+    <div class="bg-glow bg-glow-3"></div>
+
+    <!-- Header -->
+    <header id="main-header">
+        <div class="header-content">
+            <div class="logo-area">
+                <div class="logo-icon">
+                    <svg viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <rect x="2" y="2" width="28" height="28" rx="6" stroke="currentColor" stroke-width="2" fill="none"/>
+                        <path d="M8 12h16M8 16h12M8 20h8" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+                        <circle cx="24" cy="8" r="3" fill="var(--accent-primary)"/>
+                    </svg>
+                </div>
+                <div>
+                    <h1>Agent Harness X-Ray</h1>
+                    <p class="subtitle">What LLMs <em>actually</em> see from coding agents</p>
+                </div>
+            </div>
+            <nav class="main-nav">
+                <button class="nav-btn active" data-view="overview" id="nav-overview">
+                    <span class="nav-icon">◉</span> Overview
+                </button>
+                <button class="nav-btn" data-view="compare" id="nav-compare">
+                    <span class="nav-icon">⇄</span> Compare
+                </button>
+                <button class="nav-btn" data-view="prompt-viewer" id="nav-prompt-viewer">
+                    <span class="nav-icon">{ }</span> Prompt Viewer
+                </button>
+                <button class="nav-btn" data-view="token-budget" id="nav-token-budget">
+                    <span class="nav-icon">◔</span> Token Budget
+                </button>
+                <button class="nav-btn" data-view="anatomy" id="nav-anatomy">
+                    <span class="nav-icon">⚏</span> Anatomy
+                </button>
+                <button class="theme-toggle-btn" id="theme-toggle" aria-label="Toggle color mode">
+                    <span class="theme-icon moon-icon">🌙</span>
+                    <span class="theme-icon sun-icon">☀️</span>
+                </button>
+            </nav>
+        </div>
+    </header>
+
+    <!-- Main Content -->
+    <main id="app-main">
+
+        <!-- ===== OVERVIEW VIEW ===== -->
+        <section id="view-overview" class="view active">
+            <div class="view-header">
+                <h2>The Hidden Overhead</h2>
+                <p class="view-desc">Before you type a single character, agents inject thousands of tokens of instructions, tool definitions, and behavioral guidelines. Here's what each agent looks like under the hood.</p>
+            </div>
+
+            <!-- Key metrics cards -->
+            <div class="metrics-grid" id="overview-metrics">
+                <!-- Populated by JS -->
+            </div>
+
+            <!-- Main chart: Token overhead comparison -->
+            <div class="chart-section">
+                <div class="chart-header">
+                    <h3>System Prompt Overhead by Agent</h3>
+                    <p>Total tokens consumed before the user's first message</p>
+                    <div class="chart-legend" id="overview-legend"></div>
+                </div>
+                <div class="chart-container" id="overview-chart">
+                    <!-- Populated by JS -->
+                </div>
+            </div>
+
+            <!-- Summary table -->
+            <div class="table-section">
+                <h3>Agent Comparison Matrix</h3>
+                <div class="table-scroll">
+                    <table id="comparison-table">
+                        <thead>
+                            <tr>
+                                <th>Agent</th>
+                                <th>System Prompt</th>
+                                <th>Tool Defs</th>
+                                <th>Skills/Context</th>
+                                <th>Total Overhead</th>
+                                <th># Tools</th>
+                                <th># Skills</th>
+                                <th>Architecture</th>
+                            </tr>
+                        </thead>
+                        <tbody id="comparison-table-body">
+                            <!-- Populated by JS -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </section>
+
+        <!-- ===== COMPARE VIEW ===== -->
+        <section id="view-compare" class="view">
+            <div class="view-header">
+                <h2>Side-by-Side Comparison</h2>
+                <p class="view-desc">Select two agents to compare their harness architecture in detail.</p>
+            </div>
+            <div class="compare-selectors">
+                <div class="selector-group">
+                    <label>Agent A</label>
+                    <select id="compare-agent-a" class="agent-select"></select>
+                </div>
+                <div class="vs-badge">VS</div>
+                <div class="selector-group">
+                    <label>Agent B</label>
+                    <select id="compare-agent-b" class="agent-select"></select>
+                </div>
+            </div>
+            <div class="compare-panels" id="compare-panels">
+                <div class="compare-panel" id="compare-panel-a"></div>
+                <div class="compare-panel" id="compare-panel-b"></div>
+            </div>
+        </section>
+
+        <!-- ===== PROMPT VIEWER VIEW ===== -->
+        <section id="view-prompt-viewer" class="view">
+            <div class="view-header">
+                <h2>System Prompt Viewer</h2>
+                <p class="view-desc">Explore the actual system prompt content of each agent, color-coded by section type.</p>
+            </div>
+            <div class="prompt-controls">
+                <select id="prompt-agent-select" class="agent-select"></select>
+                <div class="prompt-stats" id="prompt-stats"></div>
+            </div>
+            <div class="prompt-viewer-container">
+                <div class="prompt-sidebar" id="prompt-toc">
+                    <!-- Table of contents -->
+                </div>
+                <div class="prompt-content" id="prompt-content">
+                    <!-- Prompt text with syntax highlighting -->
+                </div>
+            </div>
+        </section>
+
+        <!-- ===== TOKEN BUDGET VIEW ===== -->
+        <section id="view-token-budget" class="view">
+            <div class="view-header">
+                <h2>Token Budget Simulator</h2>
+                <p class="view-desc">See how much of your context window is consumed by agent overhead across a multi-turn conversation.</p>
+            </div>
+            <div class="budget-controls">
+                <div class="control-group">
+                    <label>Context Window</label>
+                    <select id="context-window-select">
+                        <option value="8192">8K (GPT-3.5)</option>
+                        <option value="32768">32K</option>
+                        <option value="128000" selected>128K (GPT-4o/Claude)</option>
+                        <option value="200000">200K (Claude 3.5)</option>
+                        <option value="1000000">1M (Gemini)</option>
+                        <option value="2000000">2M (Gemini 2.5)</option>
+                    </select>
+                </div>
+                <div class="control-group">
+                    <label>Agent</label>
+                    <select id="budget-agent-select" class="agent-select"></select>
+                </div>
+                <div class="control-group">
+                    <label>Conversation Turns</label>
+                    <input type="range" id="turns-slider" min="1" max="50" value="10">
+                    <span id="turns-value">10</span>
+                </div>
+            </div>
+            <div class="budget-visualization" id="budget-viz">
+                <!-- Context window visualization -->
+            </div>
+            <div class="budget-details" id="budget-details">
+                <!-- Detailed breakdown -->
+            </div>
+        </section>
+
+        <!-- ===== ANATOMY VIEW ===== -->
+        <section id="view-anatomy" class="view">
+            <div class="view-header">
+                <h2>Anatomy of an Agent Harness</h2>
+                <p class="view-desc">Explore the layered structure of what gets assembled and sent to the LLM at each turn.</p>
+            </div>
+            <div class="anatomy-controls">
+                <select id="anatomy-agent-select" class="agent-select"></select>
+            </div>
+            <div class="anatomy-container" id="anatomy-container">
+                <!-- Layered visualization -->
+            </div>
+        </section>
+    </main>
+
+    <!-- Footer -->
+    <footer>
+        <p>Data sourced from public GitHub repos, leaked prompts, and community research • Not affiliated with any agent vendor</p>
+        <p class="footer-note">Token counts are approximations based on cl100k_base tokenizer estimates</p>
+    </footer>
+
+    <script src="data.js"></script>
+    <script src="app.js"></script>
+</body>
+</html>
