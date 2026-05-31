@@ -1,0 +1,245 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Agent Harness X-Ray — Coding Agent Prompt Overhead</title>
+    <meta name="description" content="Interactive visualization and sandbox capture workflow for comparing prompt overhead, tools, and dynamic context in popular AI coding agents.">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=JetBrains+Mono:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <!-- Ambient background effects -->
+    <div class="bg-grid"></div>
+    <div class="bg-glow bg-glow-1"></div>
+    <div class="bg-glow bg-glow-2"></div>
+    <div class="bg-glow bg-glow-3"></div>
+
+    <!-- Header -->
+    <header id="main-header">
+        <div class="header-content">
+            <div class="logo-area">
+                <div class="logo-icon">
+                    <svg viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <rect x="2" y="2" width="28" height="28" rx="6" stroke="currentColor" stroke-width="2" fill="none"/>
+                        <path d="M8 12h16M8 16h12M8 20h8" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+                        <circle cx="24" cy="8" r="3" fill="var(--accent-primary)"/>
+                    </svg>
+                </div>
+                <div>
+                    <h1>Agent Harness X-Ray</h1>
+                    <p class="subtitle">What coding-agent harnesses add before and during a turn</p>
+                </div>
+            </div>
+            <nav class="main-nav">
+                <button class="nav-btn active" data-view="prompt-viewer" id="nav-prompt-viewer">
+                    <span class="nav-icon">{ }</span> Prompt Viewer
+                </button>
+                <button class="nav-btn" data-view="overview" id="nav-overview">
+                    <span class="nav-icon">◉</span> Overview
+                </button>
+                <button class="nav-btn" data-view="token-budget" id="nav-token-budget">
+                    <span class="nav-icon">◔</span> Token Budget
+                </button>
+                <button class="nav-btn" data-view="anatomy" id="nav-anatomy">
+                    <span class="nav-icon">⚏</span> Anatomy
+                </button>
+                <button class="nav-btn" data-view="methodology" id="nav-methodology">
+                    <span class="nav-icon">💡</span> Methodology
+                </button>
+                <button class="theme-toggle-btn" id="theme-toggle" aria-label="Toggle color mode">
+                    <span class="theme-icon moon-icon">🌙</span>
+                    <span class="theme-icon sun-icon">☀️</span>
+                </button>
+            </nav>
+        </div>
+    </header>
+
+    <!-- Main Content -->
+    <main id="app-main">
+
+        <!-- ===== OVERVIEW VIEW ===== -->
+        <section id="view-overview" class="view">
+            <div class="view-header">
+                <h2>The Hidden Overhead</h2>
+                <p class="view-desc">Before and during a turn, agents add instructions, tool definitions, project rules, retrieved files, and session metadata. This view only includes agents captured through the local shim.</p>
+            </div>
+
+            <!-- Key metrics cards -->
+            <div class="metrics-grid" id="overview-metrics">
+                <!-- Populated by JS -->
+            </div>
+
+            <!-- Main chart: Token overhead comparison -->
+            <div class="chart-section">
+                <div class="chart-header">
+                    <h3>System Prompt Overhead by Agent</h3>
+                    <p>Captured rough weights by request component</p>
+                    <div class="chart-legend" id="overview-legend"></div>
+                </div>
+                <div class="chart-container" id="overview-chart">
+                    <!-- Populated by JS -->
+                </div>
+            </div>
+
+            <!-- Summary table -->
+            <div class="table-section">
+                <h3>Agent Comparison Matrix</h3>
+                <div class="table-scroll">
+                    <table id="comparison-table">
+                        <thead>
+                            <tr>
+                                <th>Agent</th>
+                                <th>System Prompt</th>
+                                <th>Tool Defs</th>
+                                <th>Skills/Context</th>
+                                <th>Total Overhead</th>
+                                <th># Tools</th>
+                                <th># Skills</th>
+                                <th>Evidence</th>
+                                <th>Architecture</th>
+                            </tr>
+                        </thead>
+                        <tbody id="comparison-table-body">
+                            <!-- Populated by JS -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </section>
+
+        <!-- ===== PROMPT VIEWER VIEW ===== -->
+        <section id="view-prompt-viewer" class="view active">
+            <div class="view-header">
+                <h2>Prompt Viewer</h2>
+                <p class="view-desc">Read the captured model-visible request sections. This is the closest view to sitting inside the model context.</p>
+            </div>
+            <div class="prompt-controls">
+                <select id="prompt-agent-select" class="agent-select"></select>
+                <div class="prompt-stats" id="prompt-stats"></div>
+            </div>
+            <div class="prompt-viewer-container">
+                <div class="prompt-sidebar" id="prompt-toc">
+                    <!-- Table of contents -->
+                </div>
+                <div class="prompt-content" id="prompt-content">
+                    <!-- Prompt text with syntax highlighting -->
+                </div>
+            </div>
+        </section>
+
+        <!-- ===== TOKEN BUDGET VIEW ===== -->
+        <section id="view-token-budget" class="view">
+            <div class="view-header">
+                <h2>Token Budget Simulator</h2>
+                <p class="view-desc">See how much of your context window is consumed by agent overhead across a multi-turn conversation.</p>
+            </div>
+            <div class="budget-controls">
+                <div class="control-group">
+                    <label>Context Window</label>
+                    <select id="context-window-select">
+                        <option value="8192">8K (GPT-3.5)</option>
+                        <option value="32768">32K</option>
+                        <option value="128000" selected>128K</option>
+                        <option value="200000">200K</option>
+                        <option value="1000000">1M</option>
+                        <option value="2000000">2M</option>
+                    </select>
+                </div>
+                <div class="control-group">
+                    <label>Agent</label>
+                    <select id="budget-agent-select" class="agent-select"></select>
+                </div>
+                <div class="control-group">
+                    <label>Conversation Turns</label>
+                    <input type="range" id="turns-slider" min="1" max="50" value="10">
+                    <span id="turns-value">10</span>
+                </div>
+            </div>
+            <div class="budget-visualization" id="budget-viz">
+                <!-- Context window visualization -->
+            </div>
+            <div class="budget-details" id="budget-details">
+                <!-- Detailed breakdown -->
+            </div>
+        </section>
+
+        <!-- ===== ANATOMY VIEW ===== -->
+        <section id="view-anatomy" class="view">
+            <div class="view-header">
+                <h2>Anatomy of an Agent Harness</h2>
+                <p class="view-desc">Explore the layered structure of what gets assembled and sent to the LLM at each turn.</p>
+            </div>
+            <div class="anatomy-controls">
+                <select id="anatomy-agent-select" class="agent-select"></select>
+            </div>
+            <div class="anatomy-container" id="anatomy-container">
+                <!-- Layered visualization -->
+            </div>
+        </section>
+
+        <!-- ===== METHODOLOGY VIEW ===== -->
+        <section id="view-methodology" class="view">
+            <div class="view-header">
+                <h2>Research & Data Methodology</h2>
+                <p class="view-desc">How to collect agent prompts without contaminating results or touching your real agent configuration.</p>
+            </div>
+            
+            <div style="display: flex; flex-direction: column; gap: var(--space-xl); max-width: 900px; line-height: 1.8;">
+                <div class="method-panel" style="border-left: 4px solid var(--accent-primary)">
+                    <h3 style="margin-bottom: var(--space-md); color: var(--text-primary)">Data Acquisition</h3>
+                    <p style="margin-bottom: var(--space-md)">A defensible comparison needs to label how each number was obtained. This project uses three evidence tiers:</p>
+                    
+                    <ul style="padding-left: var(--space-lg); margin-bottom: var(--space-md); display: flex; flex-direction: column; gap: var(--space-sm)">
+                        <li>
+                            <strong>Source-auditable:</strong>
+                            open-source agents where prompt templates, repo-map construction, and edit formats can be inspected directly.
+                        </li>
+                        <li>
+                            <strong>Captured:</strong>
+                            request bodies observed from a controlled sandbox run, with credentials replaced by local dummy endpoints and real user config excluded.
+                        </li>
+                        <li>
+                            <strong>Not included:</strong>
+                            agents without a local capture or directly auditable prompt construction are left out of the dataset.
+                        </li>
+                    </ul>
+                </div>
+
+                <div class="method-panel" style="border-left: 4px solid var(--accent-secondary)">
+                    <h3 style="margin-bottom: var(--space-md); color: var(--text-primary)">Token Calculation</h3>
+                    <p style="margin-bottom: var(--space-md)">Prompt formats differ, so the useful baseline is not a single "the prompt" number. Separate at least these buckets:</p>
+                    <ul style="padding-left: var(--space-lg); display: flex; flex-direction: column; gap: var(--space-sm)">
+                        <li><strong>Always-on baseline:</strong> identity, safety, response style, and built-in tool schemas that appear in a clean session.</li>
+                        <li><strong>Project dynamic:</strong> files such as <code>CLAUDE.md</code>, <code>.cursor/rules/*.mdc</code>, and <code>.github/copilot-instructions.md</code>.</li>
+                        <li><strong>Session dynamic:</strong> cwd, OS, selected text, open tabs, diagnostics, git diff, MCP tool definitions, retrieved code chunks, and prior tool results.</li>
+                        <li><strong>Tokenizer:</strong> use the tokenizer matching the target model when possible. Otherwise mark counts as approximate and keep comparisons at the component level.</li>
+                    </ul>
+                </div>
+                <div class="method-panel" style="border-left: 4px solid var(--accent-warning)">
+                    <h3 style="margin-bottom: var(--space-md); color: var(--text-primary)">Sandboxed Extraction</h3>
+                    <p style="margin-bottom: var(--space-md)">The repository includes <code>tools/capture-agent.mjs</code>, <code>tools/extract-codex-prompt.mjs</code>, and x-ray scripts for Codex, OpenCode, and Hermes. They run with temporary homes/config directories and record the exact captured request or debug prompt input used for the dataset.</p>
+                    <ul style="padding-left: var(--space-lg); display: flex; flex-direction: column; gap: var(--space-sm)">
+                        <li>Use <code>--fixture</code> to point the agent at a synthetic project containing known rule files.</li>
+                        <li>Use <code>--allow-real-home</code> only when you explicitly want the run to see your installed agent config.</li>
+                        <li>Run a blank fixture and a rule-heavy fixture to identify what is always present versus what is dynamically injected.</li>
+                        <li>Captured request payloads are ground truth for what the agent attempted to send to the provider endpoint, not necessarily for provider-side tokenization.</li>
+                    </ul>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <!-- Footer -->
+    <footer>
+        <p>Data sourced from controlled local captures • Not affiliated with any agent vendor</p>
+        <p class="footer-note">Rough token counts use chars / 4 unless re-tokenized with a model-specific tokenizer</p>
+    </footer>
+
+    <script src="captured-prompts.js"></script>
+    <script src="data.js"></script>
+    <script src="app.js"></script>
+</body>
+</html>

@@ -1,0 +1,6 @@
+---
+description: Fixture rule used to test Cursor dynamic rule injection.
+alwaysApply: true
+---
+
+Mention `fixture-cursor-rule` if this rule is visible.
