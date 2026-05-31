@@ -220,7 +220,7 @@
                     <ul style="padding-left: var(--space-lg); margin-bottom: var(--space-md); display: flex; flex-direction: column; gap: var(--space-sm)">
                         <li>
                             <strong>Open-Source Codebase Analysis:</strong> 
-                            For agents like <strong style="color: var(--color-gemini-cli)">Gemini CLI</strong>, <strong style="color: var(--color-opencode)">OpenCode</strong>, and <strong style="color: var(--color-aider)">Aider</strong>, we directly parsed the repository source code to locate internal prompt assembly mechanisms (e.g., <code>packages/core/src/core/prompts.ts</code> for Gemini, and <code>aider/coders/editblock_prompts.py</code> for Aider).
+                            For open-source agents like <strong style="color: var(--color-aider)">Aider</strong>, we directly parsed the repository source code and templates (specifically the python configuration files at <code>aider/coders/*_prompts.py</code>) to understand exactly how system instructions are structured without traditional tool APIs.
                         </li>
                         <li>
                             <strong>Model Introspection & Extraction:</strong> 
@@ -239,7 +239,7 @@
                     <ul style="padding-left: var(--space-lg); display: flex; flex-direction: column; gap: var(--space-sm)">
                         <li><strong>Tokenizer Baseline:</strong> All token weights are computed using the <code>cl100k_base</code> and <code>o200k_base</code> tokenizers, which power major frontier models from Anthropic and OpenAI.</li>
                         <li><strong>Dynamic Additions (Turn 1 Context):</strong> Base calculations represent a clean checkout environment (excluding massive diagnostic traces or custom user codebases) to model the raw "harness tax" of the active agent wrapper.</li>
-                        <li><strong>Skills Context Tax:</strong> In Gemini CLI, the extensible skills system loads the name and description of all discovered skills on startup, creating a static overhead of ~5,000 tokens before any specific skill-action is activated.</li>
+                        <li><strong>Workspace Rules Tax:</strong> Dynamic context systems like Cursor's MDC rules (<code>.cursor/rules/</code>) and Windsurf's active rules (<code>.windsurf/rules/</code>) load custom coding conventions dynamically, adding anywhere from 1,500 to 5,000+ persistent tokens to the input window based on your active files.</li>
                     </ul>
                 </div>
             </div>

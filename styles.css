@@ -32,13 +32,9 @@
     /* Agent brand colors */
     --color-claude-code: #d4a574;
     --color-cursor: #00b4d8;
-    --color-gemini-cli: #4285f4;
-    --color-antigravity: #8b5cf6;
     --color-aider: #55efc4;
-    --color-opencode: #ff6b6b;
     --color-windsurf: #0ea5e9;
     --color-copilot: #6e40c9;
-    --color-augment: #f59e0b;
     
     /* Category colors for prompt sections */
     --cat-identity: #6c5ce7;

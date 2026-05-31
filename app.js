@@ -367,7 +367,7 @@ function initPromptViewer() {
         <option value="${key}">${AGENTS[key].name}</option>
     `).join('');
 
-    select.value = 'antigravity';
+    select.value = 'claude-code';
 
     select.addEventListener('change', () => {
         activeSectionIndex = 0;
